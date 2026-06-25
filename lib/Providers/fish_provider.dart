@@ -5,6 +5,18 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 part 'fish_provider.g.dart';
 
+@HiveType(typeId: 1)
+enum IdentificationStatus {
+  @HiveField(0)
+  pending,
+
+  @HiveField(1)
+  complete,
+
+  @HiveField(2)
+  failed,
+}
+
 @HiveType(typeId: 0)
 class Fish extends HiveObject {
   @HiveField(0)
@@ -22,7 +34,11 @@ class Fish extends HiveObject {
   @HiveField(4)
   final double ? length;
 
-  Fish({required this.name, required this.fishImagePath, required this.userID, this.weight, this.length});
+  @HiveField(5)
+  final  IdentificationStatus idStatus;
+
+  Fish({required this.name, required this.fishImagePath, required this.userID,
+   this.weight, this.length,  this.idStatus = IdentificationStatus.pending });
 }
 
 class FishProvider extends ChangeNotifier {

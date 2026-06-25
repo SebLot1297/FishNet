@@ -22,13 +22,14 @@ class FishAdapter extends TypeAdapter<Fish> {
       userID: fields[2] as String,
       weight: fields[3] as double?,
       length: fields[4] as double?,
+      idStatus: fields[5] as IdentificationStatus,
     );
   }
 
   @override
   void write(BinaryWriter writer, Fish obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -38,7 +39,9 @@ class FishAdapter extends TypeAdapter<Fish> {
       ..writeByte(3)
       ..write(obj.weight)
       ..writeByte(4)
-      ..write(obj.length);
+      ..write(obj.length)
+      ..writeByte(5)
+      ..write(obj.idStatus);
   }
 
   @override
@@ -48,6 +51,50 @@ class FishAdapter extends TypeAdapter<Fish> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is FishAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class IdentificationStatusAdapter extends TypeAdapter<IdentificationStatus> {
+  @override
+  final int typeId = 1;
+
+  @override
+  IdentificationStatus read(BinaryReader reader) {
+    switch (reader.readByte()) {
+      case 0:
+        return IdentificationStatus.pending;
+      case 1:
+        return IdentificationStatus.complete;
+      case 2:
+        return IdentificationStatus.failed;
+      default:
+        return IdentificationStatus.pending;
+    }
+  }
+
+  @override
+  void write(BinaryWriter writer, IdentificationStatus obj) {
+    switch (obj) {
+      case IdentificationStatus.pending:
+        writer.writeByte(0);
+        break;
+      case IdentificationStatus.complete:
+        writer.writeByte(1);
+        break;
+      case IdentificationStatus.failed:
+        writer.writeByte(2);
+        break;
+    }
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is IdentificationStatusAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

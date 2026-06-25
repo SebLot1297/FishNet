@@ -14,6 +14,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   Hive.registerAdapter(FishAdapter());
+  Hive.registerAdapter(IdentificationStatusAdapter());
   await Firebase.initializeApp();
 
   final fishProvider = FishProvider();
