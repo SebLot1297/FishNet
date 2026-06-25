@@ -45,3 +45,6 @@ app.*.map.json
 /android/app/release
 # Firebase credentials - never commit this
 android/app/google-services.json
+
+# Environment variables - never commit this
+.env
