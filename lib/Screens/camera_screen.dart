@@ -1,3 +1,5 @@
+import 'package:fishing_pokidex/OverallApp/global_errors_announcment.dart';
+import 'package:fishing_pokidex/Providers/fish_identification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:provider/provider.dart';
@@ -22,6 +24,38 @@ class CameraStatus extends State<CameraApp> {
   void initState() {
     super.initState();
     setupCamera();
+  }
+
+  Future<void> identifyAndUpdateFish(Fish fish, FishProvider provider) async {
+      final outcome = await FishIdentificationService().identifyFish(fish.fishImagePath);
+      try{
+        
+        if(outcome.result == IdentificationResult.success){
+          fish.name = outcome.speciesName!;
+          fish.idStatus = IdentificationStatus.complete;
+          provider.updateFish(fish);
+          
+        }
+
+        else if(outcome.result == IdentificationResult.noConnectivity || 
+                outcome.result == IdentificationResult.retryableError){
+                  fish.idStatus = IdentificationStatus.pending;
+                }
+
+        else if(outcome.result == IdentificationResult.failed){
+          fish.idStatus = IdentificationStatus.failed;
+          provider.updateFish(fish);
+          showUrgentAlert("The fish Recognition ended up failing :( Try again another time or insert the information manually");
+          
+        }
+
+
+
+      }
+      catch(e){
+        showUrgentAlert("The fish Recognition ended up failing :( Try again another time or insert the information manually");
+        print(e);
+      }
   }
 
   Future<void> setupCamera() async {
@@ -105,20 +139,26 @@ class CameraStatus extends State<CameraApp> {
     final fishProvider = Provider.of<FishProvider>(context, listen: false);
     final user = FirebaseAuth.instance.currentUser;
 
-    await fishProvider.addFish(
-      Fish(
+    final newFish = Fish(
         name: "Unknown Fish", //for now until we get fish recognition
         fishImagePath: permanentPath,
         userID: user?.uid ?? '',
         weight: weightLengthResult?['weight'],
         length: weightLengthResult?['length'],
-)
-    );
+);
+
+await fishProvider.addFish(newFish);
+    
+  identifyAndUpdateFish(newFish, fishProvider);
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Fish added to Aquarium!")),
     );
+
+
   } catch (e) {
+   //prints error to the console
+    showUrgentAlert("We had trouble adding this fish to your Aquarium, please try again!");
     print(e);
   }
 }

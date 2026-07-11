@@ -10,6 +10,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'Providers/auth_provider.dart';
 import 'Screens/login_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'OverallApp/global_errors_announcment.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,6 +64,7 @@ class MyAppState extends State<MyApp> {
 
     return MaterialApp(
       theme: themeController.themeData,
+      navigatorKey: navigatorKey,
       home: auth.isLoggedIn
           ? Scaffold(
               body: IndexedStack(

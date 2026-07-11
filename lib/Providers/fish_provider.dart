@@ -20,7 +20,7 @@ enum IdentificationStatus {
 @HiveType(typeId: 0)
 class Fish extends HiveObject {
   @HiveField(0)
-  final String name;
+  String name;
 
   @HiveField(1)
   final String fishImagePath;
@@ -29,13 +29,13 @@ class Fish extends HiveObject {
   final String userID;
 
   @HiveField(3)
-  final double ? weight;
+  double ? weight;
 
   @HiveField(4)
-  final double ? length;
+  double ? length;
 
   @HiveField(5)
-  final  IdentificationStatus idStatus;
+  IdentificationStatus idStatus;
 
   Fish({required this.name, required this.fishImagePath, required this.userID,
    this.weight, this.length,  this.idStatus = IdentificationStatus.pending });
@@ -67,5 +67,10 @@ _fishList = _box.values.where((f) => f.userID == user?.uid).toList();
     if (user != null) {
       await _userService.recordFishCaught(user.uid, xpEarned: 10);
     }
+  }
+
+  Future<void> updateFish(Fish fish) async {
+    await fish.save();
+    notifyListeners();
   }
 }

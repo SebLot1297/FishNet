@@ -82,7 +82,7 @@ final response = await(http.post(
   body: body,
 ));
 
-// TODO: check response.statusCode here
+
       // - 200 → try to parse content, return success
       // - 429 or 500-599 → return retryableError
       // - anything else (401, 400, etc.) → return failed, with errorDetail set from the body
