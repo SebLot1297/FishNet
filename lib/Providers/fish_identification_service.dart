@@ -65,7 +65,7 @@ try{
         },
         {
           'type': 'text',
-          'text': 'Identify the fish species in this image. Respond with ONLY the common name, in title case, with no punctuation, no extra words, and no explanation. Example correct response: Largemouth Bass',
+          'text': 'Identify the fish species in this image. If no fish is clearly identifiable in the image, respond with exactly: NO_FISH_DETECTED. Otherwise, respond with ONLY the common name, in title case, with no punctuation, no extra words, and no explanation. Example correct response: Largemouth Bass',
         },
       ],
     }
@@ -89,6 +89,10 @@ final response = await(http.post(
 if(response.statusCode == 200){
   final json = jsonDecode(response.body);
   final species = sanitizeSpeciesName(json['content'][0]['text']);
+  if(species == "NO_FISH_DETECTED"){
+      return FishIdentificationOutcome(result: IdentificationResult.failed, 
+errorDetail: "The API was not able to identify a fish");
+  }
   return FishIdentificationOutcome(result: IdentificationResult.success,
    speciesName: species);
 }

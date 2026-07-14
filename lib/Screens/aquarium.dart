@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../Providers/fish_provider.dart';
 import 'package:provider/provider.dart';
-
+import 'package:fishing_pokidex/OverallApp/connectivity_and_retry_mechanism.dart';
 import 'dart:io';
 
 class Aquarium extends StatefulWidget {
@@ -17,6 +17,8 @@ class AquariumStatus extends State<Aquarium> {
 
     final fishProvider = Provider.of<FishProvider>(context);
     final aquarium = fishProvider.fishList;
+    final hasPendingFish = aquarium.any((f) => f.idStatus == IdentificationStatus.pending);
+
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -34,31 +36,44 @@ class AquariumStatus extends State<Aquarium> {
       ),
 
       body: aquarium.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "You have no fish yet",
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: theme.secondaryHeaderColor, 
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "Snap your first fish to get started!",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 25,
-                      color: theme.secondaryHeaderColor,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+    ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "You have no fish yet",
+              style: TextStyle(
+                fontSize: 20,
+                color: theme.secondaryHeaderColor,
               ),
-            )
-          : ListView.builder(
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "Snap your first fish to get started!",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 25,
+                color: theme.secondaryHeaderColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      )
+    : Column(
+        children: [
+          if (hasPendingFish)
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: ElevatedButton(
+                onPressed: () {
+                  retryPendingFish(fishProvider);
+                },
+                child: const Text("Retry Identification"),
+              ),
+            ),
+          Expanded(
+            child: ListView.builder(
               itemCount: aquarium.length,
               itemBuilder: (context, index) {
                 final fish = aquarium[index];
@@ -71,6 +86,9 @@ class AquariumStatus extends State<Aquarium> {
                 );
               },
             ),
+          ),
+        ],
+      ),
     );
   }
 }

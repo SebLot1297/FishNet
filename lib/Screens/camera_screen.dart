@@ -7,7 +7,8 @@ import '../Providers/fish_provider.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-
+import 'package:fishing_pokidex/OverallApp/connectivity_and_retry_mechanism.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 class CameraApp extends StatefulWidget {
   const CameraApp({super.key});
@@ -16,17 +17,13 @@ class CameraApp extends StatefulWidget {
   State<CameraApp> createState() => CameraStatus();
 }
 
-class CameraStatus extends State<CameraApp> {
-  CameraController? controller;
-  Future<void>? initializeControllerFuture;
 
-  @override
-  void initState() {
-    super.initState();
-    setupCamera();
-  }
-
-  Future<void> identifyAndUpdateFish(Fish fish, FishProvider provider) async {
+Future<void> identifyAndUpdateFish(Fish fish, FishProvider provider) async {
+    final connection = await hasInternet();
+    if(connection == false){
+        fish.idStatus= IdentificationStatus.pending;
+        return;
+    }
       final outcome = await FishIdentificationService().identifyFish(fish.fishImagePath);
       try{
         
@@ -34,6 +31,7 @@ class CameraStatus extends State<CameraApp> {
           fish.name = outcome.speciesName!;
           fish.idStatus = IdentificationStatus.complete;
           provider.updateFish(fish);
+          await HapticFeedback.lightImpact();
           
         }
 
@@ -57,6 +55,19 @@ class CameraStatus extends State<CameraApp> {
         print(e);
       }
   }
+
+
+class CameraStatus extends State<CameraApp> {
+  CameraController? controller;
+  Future<void>? initializeControllerFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    setupCamera();
+  }
+
+  
 
   Future<void> setupCamera() async {
      // Check permission before touching the camera
@@ -86,6 +97,7 @@ class CameraStatus extends State<CameraApp> {
   }
 
   Future<void> takePicture(BuildContext context) async {
+  
   try {
     await initializeControllerFuture;
     final image = await controller!.takePicture();
@@ -147,8 +159,8 @@ class CameraStatus extends State<CameraApp> {
         length: weightLengthResult?['length'],
 );
 
-await fishProvider.addFish(newFish);
-    
+  await fishProvider.addFish(newFish);
+
   identifyAndUpdateFish(newFish, fishProvider);
 
     ScaffoldMessenger.of(context).showSnackBar(
