@@ -37,8 +37,12 @@ class Fish extends HiveObject {
   @HiveField(5)
   IdentificationStatus idStatus;
 
+  @HiveField(6)
+  String ? scientificName;
+
   Fish({required this.name, required this.fishImagePath, required this.userID,
-   this.weight, this.length,  this.idStatus = IdentificationStatus.pending });
+   this.weight, this.length,  this.idStatus = IdentificationStatus.pending,
+   this.scientificName });
 }
 
 class FishProvider extends ChangeNotifier {

@@ -23,13 +23,14 @@ class FishAdapter extends TypeAdapter<Fish> {
       weight: fields[3] as double?,
       length: fields[4] as double?,
       idStatus: fields[5] as IdentificationStatus,
+      scientificName: fields[6] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Fish obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -41,7 +42,9 @@ class FishAdapter extends TypeAdapter<Fish> {
       ..writeByte(4)
       ..write(obj.length)
       ..writeByte(5)
-      ..write(obj.idStatus);
+      ..write(obj.idStatus)
+      ..writeByte(6)
+      ..write(obj.scientificName);
   }
 
   @override

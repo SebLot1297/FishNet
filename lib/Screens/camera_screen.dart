@@ -29,6 +29,7 @@ Future<void> identifyAndUpdateFish(Fish fish, FishProvider provider) async {
         
         if(outcome.result == IdentificationResult.success){
           fish.name = outcome.speciesName!;
+          fish.scientificName = outcome.scientificName!;
           fish.idStatus = IdentificationStatus.complete;
           provider.updateFish(fish);
           await HapticFeedback.lightImpact();
@@ -43,7 +44,8 @@ Future<void> identifyAndUpdateFish(Fish fish, FishProvider provider) async {
         else if(outcome.result == IdentificationResult.failed){
           fish.idStatus = IdentificationStatus.failed;
           provider.updateFish(fish);
-          showUrgentAlert("The fish Recognition ended up failing :( Try again another time or insert the information manually");
+          showUrgentAlert("The fish Recognition ended up failing. Try taking/inserting another picture!");
+          debugPrint('Identification failed: ${outcome.errorDetail}');
           
         }
 
@@ -157,6 +159,7 @@ class CameraStatus extends State<CameraApp> {
         userID: user?.uid ?? '',
         weight: weightLengthResult?['weight'],
         length: weightLengthResult?['length'],
+        scientificName: null,
 );
 
   await fishProvider.addFish(newFish);

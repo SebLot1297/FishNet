@@ -73,7 +73,7 @@ class BottomHud extends StatelessWidget {
             ),
           BottomNavigationBarItem(
               icon: Image.asset(
-                "assets/Fishing.svg.png",
+                "assets/aquarium.png",
                 width: 24,
                 height: 24,
                 color: pageIndex == 1

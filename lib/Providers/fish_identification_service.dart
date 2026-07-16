@@ -15,9 +15,10 @@ class FishIdentificationOutcome {
   final IdentificationResult result;
   final String? speciesName;
   final String? errorDetail;
+  final String? scientificName;
 
   FishIdentificationOutcome({required this.result,this.speciesName,
-  this.errorDetail,
+  this.errorDetail, this.scientificName
   });
 }
 
@@ -25,6 +26,15 @@ String sanitizeSpeciesName(String raw) {
   var cleaned = raw.trim();
   cleaned = cleaned.replaceAll(RegExp(r'[.\n]+$'), ''); // trailing punctuation/newlines
   return cleaned;
+}
+
+String stripCodeFences(String text) {
+  var cleaned = text.trim();
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replaceFirst(RegExp(r'^```[a-zA-Z]*\n?'), '');
+    cleaned = cleaned.replaceFirst(RegExp(r'\n?```$'), '');
+  }
+  return cleaned.trim();
 }
 
 class FishIdentificationService{
@@ -50,7 +60,7 @@ try{
 
   final body = jsonEncode({
   'model': 'claude-haiku-4-5-20251001',
-  'max_tokens': 50,
+  'max_tokens': 100,
   'messages': [
     {
       'role': 'user',
@@ -65,7 +75,7 @@ try{
         },
         {
           'type': 'text',
-          'text': 'Identify the fish species in this image. If no fish is clearly identifiable in the image, respond with exactly: NO_FISH_DETECTED. Otherwise, respond with ONLY the common name, in title case, with no punctuation, no extra words, and no explanation. Example correct response: Largemouth Bass',
+          'text': 'You are a fish identification expert analyzing a photo taken by an angler. Look at the image and identify the fish species shown. Respond with ONLY a raw JSON object — no markdown formatting, no code fences, no explanatory text before or after. If a fish is clearly visible and identifiable, respond in this exact example shape: { "commonName": "Largemouth Bass", "scientificName": "Micropterus salmoides" } Rules for scientificName: Always provide genus AND species (two words), never just the genus. Use the currently accepted name, not an outdated synonym, to the best of your knowledge. Capitalize only the genus (first word); species stays lowercase. If you are only confident enough to narrow it down to genus level, still provide your best full species-level guess rather than leaving it incomplete. If no fish is clearly visible in the image, or the image is too unclear/blurry/dark to identify anything, respond with exactly this shape instead: { "commonName": "NO_FISH_DETECTED", "scientificName": "NO_FISH_DETECTED" } Do not include any fields other than commonName and scientificName. Do not include confidence levels, descriptions, or any other text.',
         },
       ],
     }
@@ -88,13 +98,26 @@ final response = await(http.post(
       // - anything else (401, 400, etc.) → return failed, with errorDetail set from the body
 if(response.statusCode == 200){
   final json = jsonDecode(response.body);
-  final species = sanitizeSpeciesName(json['content'][0]['text']);
-  if(species == "NO_FISH_DETECTED"){
+  final rawText = stripCodeFences(json['content'][0]['text']);
+
+  Map<String, dynamic> parsed;
+  try {
+    parsed = jsonDecode(rawText);
+  } catch (e) {
+    return FishIdentificationOutcome(
+      result: IdentificationResult.failed,
+      errorDetail: 'Claude returned malformed JSON: $rawText',
+    );
+  }
+
+  final commonName = sanitizeSpeciesName(parsed['commonName']);
+  final scienceName = sanitizeSpeciesName(parsed['scientificName']);
+  if(commonName == "NO_FISH_DETECTED"){
       return FishIdentificationOutcome(result: IdentificationResult.failed, 
 errorDetail: "The API was not able to identify a fish");
   }
   return FishIdentificationOutcome(result: IdentificationResult.success,
-   speciesName: species);
+   speciesName: commonName, scientificName: scienceName);
 }
 
 else if(response.statusCode == 429 || (response.statusCode >= 500 && response.statusCode <=599)){
